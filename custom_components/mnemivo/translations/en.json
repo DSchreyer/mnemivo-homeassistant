@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Mnemivo",
+        "description": "Enter your Mnemivo Edge Function URL and the API token you set as a Supabase secret.",
+        "data": {
+          "api_url": "Edge Function URL",
+          "api_token": "API Token"
+        },
+        "data_description": {
+          "api_url": "e.g. https://<project>.supabase.co/functions/v1/ha-api",
+          "api_token": "The value of your HA_API_TOKEN secret"
+        }
+      },
+      "lists": {
+        "title": "Select Lists",
+        "description": "Choose which shopping lists to expose as todo entities in Home Assistant.",
+        "data": {
+          "list_ids": "Lists"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect. Check the URL and your network.",
+      "invalid_auth": "Invalid API token."
+    },
+    "abort": {
+      "already_configured": "Mnemivo is already configured."
+    }
+  }
+}
