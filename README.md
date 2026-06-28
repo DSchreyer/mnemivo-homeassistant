@@ -1,60 +1,65 @@
 # Mnemivo for Home Assistant
 
-A [Home Assistant](https://www.home-assistant.io/) custom integration that exposes Mnemivo shopping lists as native **todo entities** — with two-way sync, voice assistant support, and automations.
+A [Home Assistant](https://www.home-assistant.io/) custom integration that exposes your Mnemivo shopping lists as native **todo entities** — with two-way live sync, voice assistant support, and automations.
 
-## Features
+## What you get
 
-- Native `todo.*` entities — one per selected shopping list
-- Check off items in HA → syncs to the Mnemivo app
-- Add items via voice ("Hey Google, add Milk to Mnemivo")
-- Automations: notify when the list changes, reset checked items at midnight, etc.
-- Polls every 30 seconds; optimistic updates feel instant
-
-## Prerequisites
-
-- A Mnemivo account (signed in on the app)
-- Home Assistant 2024.6 or newer
+- Native `todo.*` entities in HA — one per selected list
+- Check off items in HA → syncs to the Mnemivo app (and vice versa)
+- Add items via voice: *"Hey Google, add Milk to my shopping list"*
+- Use in automations: notify when you leave home, reset the list after shopping, etc.
+- Polls every 30 seconds; writes feel instant (optimistic updates)
 
 ---
 
-## Setup
+## Installation
 
-### Step 1 — Get your personal API token
-
-Open the **Mnemivo app → Settings → Home Assistant Token** and tap **Generate token**.
-
-Copy both values shown:
-- **Edge Function URL** — the same for all users
-- **Token** — personal to your account, shown only once
-
-> You must be signed in to generate a token.
-
-### Step 2 — Install the integration
+### Step 1 — Install the integration in Home Assistant
 
 **Option A: HACS (recommended)**
 
-1. In HACS, go to **Integrations → Custom repositories**
-2. Add `https://github.com/DSchreyer/mnemivo-homeassistant` as an **Integration**
-3. Search for "Mnemivo" and install
+1. Open HACS → Integrations
+2. Click the three-dot menu → **Custom repositories**
+3. Add `https://github.com/DSchreyer/mnemivo-homeassistant` as type **Integration**
+4. Search for **Mnemivo** and install
+5. Restart Home Assistant
 
 **Option B: Manual**
 
-Copy the `custom_components/mnemivo/` folder into your HA config directory:
+Download or clone this repo, then copy the `custom_components/mnemivo/` folder into your HA config directory:
 
-```bash
-cp -r custom_components/mnemivo  /path/to/homeassistant/config/custom_components/
+```
+<HA config>/
+└── custom_components/
+    └── mnemivo/       ← copy this folder here
 ```
 
 Restart Home Assistant.
 
-### Step 3 — Configure in HA
+---
+
+### Step 2 — Generate your personal API token
+
+Every Mnemivo user gets their own token — no shared secrets, no developer tools needed.
+
+1. Open the **Mnemivo app**
+2. Go to **Settings → Home Assistant Token**
+3. Tap **Generate token**
+4. You will see two values — **copy both**:
+   - **Edge Function URL** (same for all users)
+   - **Your token** (personal to your account — shown only once)
+
+> You must be signed in to the Mnemivo app to generate a token.
+
+---
+
+### Step 3 — Connect in Home Assistant
 
 1. Go to **Settings → Integrations → Add Integration**
 2. Search for **Mnemivo**
-3. Enter:
-   - **Edge Function URL** — `https://<your-project-ref>.supabase.co/functions/v1/ha-api`
-   - **API Token** — the token you generated in Step 1
-4. Select which shopping lists to expose
+3. Enter the **Edge Function URL** and your **token** from Step 2
+4. Select which lists to expose in Home Assistant
+5. Done ✓
 
 ---
 
@@ -62,7 +67,7 @@ Restart Home Assistant.
 
 Each selected list becomes a `todo.*` entity (e.g. `todo.einkaufsliste`).
 
-### Dashboard card
+### Shopping list dashboard card
 
 ```yaml
 type: todo-list
@@ -79,7 +84,7 @@ data:
   item: Milch
 ```
 
-### Automation example — remind when leaving home
+### Automation — remind when leaving home
 
 ```yaml
 automation:
@@ -90,30 +95,38 @@ automation:
     event: leave
   condition:
     condition: template
-    value_template: "{{ state_attr('todo.einkaufsliste', 'items') | selectattr('status', 'eq', 'needs_action') | list | count > 0 }}"
+    value_template: >
+      {{ state_attr('todo.einkaufsliste', 'items')
+         | selectattr('status', 'eq', 'needs_action')
+         | list | count > 0 }}
   action:
     service: notify.mobile_app
     data:
-      message: "Du hast {{ state_attr('todo.einkaufsliste', 'items') | selectattr('status', 'eq', 'needs_action') | list | count }} Artikel auf der Einkaufsliste."
+      message: >
+        {{ state_attr('todo.einkaufsliste', 'items')
+           | selectattr('status', 'eq', 'needs_action')
+           | list | count }} items on your shopping list.
 ```
 
 ---
 
 ## How sync works
 
-| Direction | Trigger | Latency |
-|-----------|---------|---------|
+| Direction | How | Latency |
+|-----------|-----|---------|
 | App → HA | HA polls every 30 s | ≤ 30 s |
-| HA → App | Immediate write to Supabase; app pulls on next sync | ≤ 2 min |
+| HA → App | Immediate write; app pulls on next sync | ≤ 2 min |
 
-Items created in HA appear in the app as soon as the app's sync engine runs (usually within 2 seconds if the app is open, up to 2 minutes in the background).
+Items added in HA appear in the app as soon as the app syncs (typically within a few seconds when the app is open).
 
 ---
 
 ## Troubleshooting
 
-**"Cannot connect"** — Check the Edge Function URL and make sure the function is deployed.
+**"Cannot connect"** — Check the Edge Function URL is correct and your network allows outbound HTTPS.
 
-**"Invalid auth"** — Regenerate your token in the Mnemivo app (Settings → Home Assistant Token → Regenerate token) and update it in HA.
+**"Invalid auth"** — Your token may have been regenerated. Open Mnemivo → Settings → Home Assistant Token → Regenerate, then update the token in HA (delete and re-add the integration).
 
-**Items not appearing in the app** — Make sure the list's space is set to cloud sync in the Mnemivo app settings.
+**Items not syncing to app** — Make sure the list's space is set to cloud sync in the Mnemivo app. Local-only lists are not accessible via the API.
+
+**List not appearing in HA** — Only lists you own or have been invited to are shown. Check you are signed in to the correct account.
