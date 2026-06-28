@@ -1,6 +1,6 @@
 # Mnemivo for Home Assistant
 
-A [Home Assistant](https://www.home-assistant.io/) custom integration that exposes [Mnemivo](https://github.com/yourusername/mnemivo) shopping lists as native **todo entities** — with two-way sync, voice assistant support, and automations.
+A [Home Assistant](https://www.home-assistant.io/) custom integration that exposes Mnemivo shopping lists as native **todo entities** — with two-way sync, voice assistant support, and automations.
 
 ## Features
 
@@ -45,7 +45,7 @@ https://<your-project-ref>.supabase.co/functions/v1/ha-api
 **Option A: HACS (recommended)**
 
 1. In HACS, go to **Integrations → Custom repositories**
-2. Add `https://github.com/yourusername/mnemivo-homeassistant` as an **Integration**
+2. Add `https://github.com/DSchreyer/mnemivo-homeassistant` as an **Integration**
 3. Search for "Mnemivo" and install
 
 **Option B: Manual**
